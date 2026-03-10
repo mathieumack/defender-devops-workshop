@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------------
+# .github/workflows/codeql.yml — CodeQL SAST Scanning
+# ---------------------------------------------------------------------------
+# Runs GitHub Advanced Security CodeQL analysis on every push and PR.
+# Produces SARIF results that appear in the Security tab and as PR annotations.
+# Defender for Cloud ingests these findings via the DevOps connector.
+# ---------------------------------------------------------------------------
+
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * 1"   # Weekly Monday scan
+
+permissions:
+  security-events: write
+  contents: read
+  actions: read
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Use the extended query suite for more findings
+          queries: +security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

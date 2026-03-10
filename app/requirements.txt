@@ -1,0 +1,11 @@
+# Defender for DevOps Demo — Vulnerable Dependencies
+# ===================================================
+# ISSUE: flask 2.2.0 has known CVEs (e.g., CVE-2023-30861 — session cookie
+#        handling). Pinning this version intentionally triggers dependency
+#        scanning (Dependabot / dependency-review-action).
+# FIX: Upgrade to flask >=3.0.0 (see requirements-fixed.txt).
+
+flask==2.2.0
+flask-cors==4.0.0
+Werkzeug==2.2.2
+Jinja2==3.1.2

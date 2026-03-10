@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------------------
+# .github/workflows/msdo.yml — Microsoft Security DevOps (MSDO)
+# ---------------------------------------------------------------------------
+# Runs the Microsoft Security DevOps GitHub Action which bundles multiple
+# security tools under one action:
+#   - Checkov / Terrascan (IaC scanning for Bicep, Terraform, ARM, Helm)
+#   - Trivy (container / dependency scanning)
+#   - Bandit (Python SAST)
+#   - ESLint security plugin (JavaScript/TypeScript SAST)
+#   - Template Analyzer (ARM template scanning)
+#
+# Produces SARIF output that is uploaded to the Security tab.
+# Defender for Cloud DevOps connector ingests these results.
+# ---------------------------------------------------------------------------
+
+name: "Microsoft Security DevOps"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  security-events: write
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  msdo:
+    name: MSDO Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Microsoft Security DevOps
+        uses: microsoft/security-devops-action@v1
+        id: msdo
+        with:
+          # Optionally specify which tools to run (default: all applicable)
+          # tools: checkov, terrascan, trivy, bandit
+          #
+          # Include SARIF output for upload
+          categories: "IaC,code"
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
+
+      - name: Upload SARIF as artifact (for review)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: msdo-sarif
+          path: ${{ steps.msdo.outputs.sarifFile }}
