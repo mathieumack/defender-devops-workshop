@@ -38,14 +38,16 @@ jobs:
         run: docker build -f container/Dockerfile -t demo-api:scan .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          image-ref: "demo-api:scan"
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH,MEDIUM"
-          # Don't fail the build in demo — we want findings to show up
-          exit-code: "0"
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "${{ github.workspace }}:/workspace" \
+            aquasec/trivy:latest image \
+            --format sarif \
+            --output /workspace/trivy-results.sarif \
+            --severity CRITICAL,HIGH,MEDIUM \
+            --exit-code 0 \
+            demo-api:scan
 
       - name: Upload Trivy SARIF to Security tab
         uses: github/codeql-action/upload-sarif@v3
