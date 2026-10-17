@@ -76,6 +76,51 @@ cp variables.env.example variables.env
 source variables.env
 ```
 
+## GitHub Codespaces Quick Start
+
+1. In GitHub, open this repository and choose **Code** → **Codespaces** → **Create codespace on main**.
+2. Wait for the dev container to finish building. It installs the Azure CLI, GitHub CLI, Docker support, creates a workspace-local `.venv`, installs `app/requirements.txt`, installs Bicep for the Azure CLI, and adds the Azure CLI extensions used by the workshop scripts.
+3. Copy the sample environment file and add your own values:
+
+   ```bash
+   cp variables.env.example variables.env
+   ${EDITOR:-nano} variables.env
+   source variables.env
+   ```
+
+4. Authenticate only for the actions you plan to take:
+
+   ```bash
+   az login
+   gh auth login
+   ```
+
+5. Verify the required tooling in the Codespace:
+
+   ```bash
+   python --version
+   az --version
+   az bicep version
+   gh --version
+   docker version
+   git --version
+   make help
+   ```
+
+6. Use the isolated Python environment for the demo app and container build commands:
+
+   ```bash
+   source .venv/bin/activate
+   python app/server.py
+   docker build -f container/Dockerfile -t demo-api:local .
+   ```
+
+> [!IMPORTANT]
+> Codespaces forwards the Flask app on port 5000 as **private** by default. Keep it private: the workshop intentionally includes vulnerable code and should never be exposed publicly.
+
+> [!NOTE]
+> The dev container setup does **not** copy credentials, deploy Azure resources, seed findings, trigger workflows, or run teardown automatically. Rebuilding the container reruns the local `.venv` setup only; it does not overwrite `variables.env` or your authenticated sessions. Those remain explicit user actions after you authenticate and choose to run the workshop commands.
+
 ### 2. Bootstrap Azure infrastructure
 
 ```bash
@@ -168,6 +213,22 @@ See detailed instructions for each platform:
 ## Safety Notice
 
 > **All secrets in this repo are intentionally fake/dummy values** used solely to trigger secret-scanning alerts. They are clearly marked and have no access to any real system. Do not replace them with real credentials.
+>
+> When using Codespaces, keep `variables.env`, Azure credentials, and GitHub credentials out of committed files and image layers. Delete the Codespace after the workshop so cached credentials and forwarded ports are cleaned up with the environment.
+
+## Cleanup
+
+When you are finished with the workshop:
+
+```bash
+make teardown
+```
+
+Then:
+
+1. Sign out of Azure or GitHub in the Codespace if desired (`az logout`, `gh auth logout`).
+2. Stop and delete the Codespace from the GitHub Codespaces UI.
+3. Confirm the Azure resource group has been removed before ending the session.
 
 ---
 
